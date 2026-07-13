@@ -33,11 +33,11 @@
     "frame_index": "frames-index.jsonl",
     "ocr_status": "ocr-status.json"
   },
-  "updated_at": "2026-07-13T06:16:12+00:00",
+  "updated_at": "2026-07-13T06:53:37+00:00",
   "source_type": "hard_subtitle_ocr",
-  "started_at": "2026-07-13T06:16:10+00:00",
-  "completed_at": "2026-07-13T06:16:12+00:00",
-  "duration_seconds": 1.652,
+  "started_at": "2026-07-13T06:53:35+00:00",
+  "completed_at": "2026-07-13T06:53:37+00:00",
+  "duration_seconds": 1.799,
   "failure_reason": "RuntimeError: low-quality video download failed with exit code 1: ERROR: [BiliBili] 1ht7n6xEb5: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)",
   "diagnostics": {
     "subtitle_track": {
