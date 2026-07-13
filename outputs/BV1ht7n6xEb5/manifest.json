@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "pipeline_version": "2.0.0",
+  "status": "failed",
+  "fingerprint": "e2c011ac447101457ec3fb15f5da5fb9edf34f59e17ebc1f931eae1745f9b56b",
+  "input": "BV1ht7n6xEb5",
+  "resolved_url": "https://www.bilibili.com/video/BV1ht7n6xEb5/",
+  "video_id": "BV1ht7n6xEb5",
+  "output_key": "BV1ht7n6xEb5",
+  "config": {
+    "sample_interval_seconds": 3.0,
+    "start_time": null,
+    "end_time": null,
+    "crop": {
+      "top": 0.5,
+      "bottom": 0.94,
+      "left": 0.04,
+      "right": 0.96
+    },
+    "prefer_subtitle_track": true,
+    "enable_hardsub_ocr": true,
+    "keep_frames": "changed",
+    "max_frame_width": 1280,
+    "frame_similarity_threshold": 0.018,
+    "adaptive_ocr_confidence": 0.78,
+    "force": false
+  },
+  "outputs": {
+    "segments": "segments.jsonl",
+    "subtitle": "subtitle.srt",
+    "transcript": "transcript.md",
+    "source_card": "source-card.md",
+    "frame_index": "frames-index.jsonl",
+    "ocr_status": "ocr-status.json"
+  },
+  "updated_at": "2026-07-13T06:16:12+00:00",
+  "source_type": "hard_subtitle_ocr",
+  "started_at": "2026-07-13T06:16:10+00:00",
+  "completed_at": "2026-07-13T06:16:12+00:00",
+  "duration_seconds": 1.652,
+  "failure_reason": "RuntimeError: low-quality video download failed with exit code 1: ERROR: [BiliBili] 1ht7n6xEb5: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)",
+  "diagnostics": {
+    "subtitle_track": {
+      "bbdown_exit_code": 1,
+      "files_found": [],
+      "selected_file": null,
+      "rejected": [],
+      "log_tail": "ERROR: [BiliBili] 1ht7n6xEb5: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)"
+    }
+  }
+}
