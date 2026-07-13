@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bilibili-script-distiller-core"
+version = "2.0.0"
+description = "Efficient Bilibili subtitle-track extraction and hard-subtitle OCR infrastructure"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "Pillow>=10.0,<13",
+  "onnxruntime>=1.17,<2",
+  "rapidocr>=3.9.1,<4",
+  "yt-dlp>=2026.7.4,<2027",
+]
+
+[project.scripts]
+bilibili-distiller-core = "bilibili_distiller_core.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

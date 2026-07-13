@@ -1,0 +1,212 @@
+name: Extract Bilibili subtitles (core only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_urls:
+        description: "Bilibili URLs, BV IDs, or AV IDs; whitespace, commas, and newlines are accepted"
+        required: true
+        type: string
+      sample_interval:
+        description: "Seconds between hard-subtitle screenshots (minimum 3)"
+        required: true
+        default: "3"
+        type: choice
+        options:
+          - "3"
+          - "4"
+          - "5"
+          - "6"
+          - "10"
+      start_time:
+        description: "Optional start time: seconds, MM:SS, or HH:MM:SS"
+        required: false
+        type: string
+      end_time:
+        description: "Optional end time: seconds, MM:SS, or HH:MM:SS"
+        required: false
+        type: string
+      prefer_subtitle_track:
+        description: "Use a platform subtitle track before hard-subtitle OCR"
+        required: true
+        default: true
+        type: boolean
+      enable_hardsub_ocr:
+        description: "Use hard-subtitle OCR when no usable track exists"
+        required: true
+        default: true
+        type: boolean
+      keep_frames:
+        description: "Screenshots retained in the run Artifact"
+        required: true
+        default: "changed"
+        type: choice
+        options:
+          - "changed"
+          - "none"
+          - "all"
+      force:
+        description: "Ignore a matching successful manifest and process again"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bilibili-core-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      VIDEO_URLS: ${{ inputs.video_urls }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Ensure FFmpeg is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          ffmpeg -version | head -n 1
+          ffprobe -version | head -n 1
+
+      - name: Install core dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install -e .
+          yt-dlp --version
+
+      - name: Run unit tests
+        shell: bash
+        run: python -m unittest discover -s tests -v
+
+      - name: Extract subtitles
+        id: extract
+        shell: bash
+        env:
+          SAMPLE_INTERVAL: ${{ inputs.sample_interval }}
+          START_TIME: ${{ inputs.start_time }}
+          END_TIME: ${{ inputs.end_time }}
+          PREFER_SUBTITLE_TRACK: ${{ inputs.prefer_subtitle_track }}
+          ENABLE_HARDSUB_OCR: ${{ inputs.enable_hardsub_ocr }}
+          KEEP_FRAMES: ${{ inputs.keep_frames }}
+          FORCE_RUN: ${{ inputs.force }}
+        run: |
+          set -uo pipefail
+          args=(
+            --output-root outputs
+            --work-root "$RUNNER_TEMP/bilibili-core-work"
+            --summary-json "$RUNNER_TEMP/run-summary.json"
+            --sample-interval "$SAMPLE_INTERVAL"
+            --keep-frames "$KEEP_FRAMES"
+          )
+          [[ -n "$START_TIME" ]] && args+=(--start-time "$START_TIME")
+          [[ -n "$END_TIME" ]] && args+=(--end-time "$END_TIME")
+          [[ "$PREFER_SUBTITLE_TRACK" != "true" ]] && args+=(--skip-subtitle-track)
+          [[ "$ENABLE_HARDSUB_OCR" != "true" ]] && args+=(--disable-hardsub-ocr)
+          [[ "$FORCE_RUN" == "true" ]] && args+=(--force)
+
+          set +e
+          bilibili-distiller-core "${args[@]}"
+          code=$?
+          set -e
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+
+      - name: Commit text results
+        id: publish
+        shell: bash
+        run: |
+          set -uo pipefail
+          if [[ ! -d outputs ]]; then
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "reason=no output directory was produced" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git add -- outputs
+          if git diff --cached --quiet; then
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "reason=no changed text outputs" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add core subtitle extraction results"
+          if git push; then
+            echo "mode=commit" >> "$GITHUB_OUTPUT"
+            echo "reason=results committed to the repository" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=artifact" >> "$GITHUB_OUTPUT"
+            echo "reason=push failed; results are available as an artifact" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload result fallback
+        if: steps.publish.outputs.mode == 'artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-core-results-${{ github.run_id }}
+          path: outputs/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload evidence screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bilibili-core-frames-${{ github.run_id }}
+          path: outputs/*/frames/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Write run summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Bilibili core extraction"
+            echo
+            if [[ -f "$RUNNER_TEMP/run-summary.json" ]]; then
+              python - "$RUNNER_TEMP/run-summary.json" <<'PY'
+          import json
+          import sys
+
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          print(f"- Processed: {data.get('processed', 0)}")
+          print(f"- Successful: {data.get('successful', 0)}")
+          print(f"- Cached: {data.get('cached', 0)}")
+          print(f"- Failed: {data.get('failed', 0)}")
+          for item in data.get("items", []):
+              state = "cached" if item.get("skipped") else "success" if item.get("success") else "failed"
+              detail = item.get("source_type") or item.get("failure_reason") or "unknown"
+              print(f"- `{item.get('input', '')}`: {state} ({detail})")
+          PY
+            fi
+            echo "- Save mode: ${{ steps.publish.outputs.mode || 'unknown' }}"
+            echo "- Details: ${{ steps.publish.outputs.reason || 'not available' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail when all inputs failed
+        if: always() && steps.extract.outputs.exit_code != '0'
+        shell: bash
+        run: |
+          echo "::error::All requested extractions failed"
+          exit 1
