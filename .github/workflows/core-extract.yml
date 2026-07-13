@@ -96,6 +96,15 @@ jobs:
           python -m pip install --upgrade --pre "yt-dlp[curl-cffi]>=2026.7.4,<2027"
           yt-dlp --version
           yt-dlp --list-impersonate-targets
+          python - <<'PY'
+          import curl_cffi
+          from yt_dlp.networking.impersonate import ImpersonateTarget
+
+          target = ImpersonateTarget.from_str("chrome")
+          assert isinstance(target, ImpersonateTarget)
+          print(f"curl_cffi={getattr(curl_cffi, '__version__', 'unknown')}")
+          print(f"impersonate_target={target}")
+          PY
 
       - name: Run unit tests
         shell: bash

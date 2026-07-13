@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -29,6 +30,7 @@ from typing import Any, Callable, Iterable, Literal, Protocol, Sequence
 import numpy as np
 import yt_dlp
 from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+from yt_dlp.networking.impersonate import ImpersonateTarget
 
 
 SCHEMA_VERSION = 3
@@ -273,6 +275,7 @@ class SubtitleTrackResult:
     video_id: str | None = None
     log_tail: str | None = None
     download_error: str | None = None
+    error_traceback: str | None = None
 
     @property
     def usable(self) -> bool:
@@ -448,7 +451,7 @@ def _ydl_base_opts(extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "Origin": BILIBILI_ORIGIN,
             "User-Agent": CHROME_UA,
         },
-        "impersonate": "chrome",
+        "impersonate": ImpersonateTarget.from_str("chrome"),
     }
     if extra:
         opts.update(extra)
@@ -797,6 +800,8 @@ def download_best_subtitle_track(
                 download=True,
             )
         except Exception as exc:
+            result.error_traceback = traceback.format_exc()
+            print(result.error_traceback, file=sys.stderr, flush=True)
             result.download_error = f"{type(exc).__name__}: {exc}"
             result.log_tail = str(exc)
 
@@ -2159,6 +2164,7 @@ def process_video(
                     ),
                     "rejected": track.rejected,
                     "log_tail": track.log_tail,
+                    "traceback": track.error_traceback,
                 }
                 if track.usable:
                     source_type = "subtitle_track"
@@ -2285,6 +2291,8 @@ def process_video(
             )
     except Exception as exc:
         reason = f"{type(exc).__name__}: {exc}"
+        error_traceback = traceback.format_exc()
+        print(error_traceback, file=sys.stderr, flush=True)
         store.write_manifest(
             base_manifest(video_ref, config, fingerprint, status="failed")
             | {
@@ -2293,6 +2301,7 @@ def process_video(
                 "completed_at": utc_now(),
                 "duration_seconds": round(time.monotonic() - started, 3),
                 "failure_reason": reason,
+                "traceback": error_traceback,
                 "diagnostics": diagnostics,
             }
         )

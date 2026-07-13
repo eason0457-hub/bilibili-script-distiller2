@@ -4,16 +4,22 @@ from pathlib import Path
 from unittest import mock
 
 import yt_dlp
+from yt_dlp.networking.impersonate import ImpersonateTarget
 
 from bilibili_distiller_core import core
 
 
 class CoreNetworkTests(unittest.TestCase):
+    def test_impersonate_option_is_a_target_object(self):
+        opts = core._ydl_base_opts()
+        self.assertIsInstance(opts["impersonate"], ImpersonateTarget)
+        self.assertNotIsInstance(opts["impersonate"], str)
+
     def test_library_options_are_browser_like(self):
         opts = core._ydl_base_opts()
         self.assertTrue(opts["ignoreconfig"])
         self.assertTrue(opts["noplaylist"])
-        self.assertEqual(opts["impersonate"], "chrome")
+        self.assertIsInstance(opts["impersonate"], ImpersonateTarget)
         self.assertEqual(
             opts["http_headers"]["Referer"],
             "https://www.bilibili.com/",
@@ -54,7 +60,9 @@ class CoreNetworkTests(unittest.TestCase):
         self.assertEqual(result["id"], "BV1uknVz9EeN")
         self.assertEqual(len(attempts), 3)
         self.assertEqual(sleep.call_count, 2)
-        self.assertTrue(all(item["impersonate"] == "chrome" for item in attempts))
+        self.assertTrue(
+            all(isinstance(item["impersonate"], ImpersonateTarget) for item in attempts)
+        )
 
 
 class CoreOutputTests(unittest.TestCase):
