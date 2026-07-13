@@ -88,6 +88,63 @@ jobs:
           ffmpeg -version | head -n 1
           ffprobe -version | head -n 1
 
+      - name: Install BBDown downloader
+        shell: bash
+        run: |
+          set -euo pipefail
+          BBDOWN_URL="$(python - <<'PY'
+          import json
+          import platform
+          import urllib.request
+
+          system = {"Linux": "linux", "Darwin": "osx"}.get(platform.system())
+          machine = {
+              "x86_64": "x64",
+              "AMD64": "x64",
+              "aarch64": "arm64",
+              "arm64": "arm64",
+          }.get(platform.machine())
+          if not system or not machine:
+              raise SystemExit(
+                  f"Unsupported runner: {platform.system()} {platform.machine()}"
+              )
+          request = urllib.request.Request(
+              "https://api.github.com/repos/nilaoda/BBDown/releases/latest",
+              headers={
+                  "Accept": "application/vnd.github+json",
+                  "User-Agent": "bilibili-script-distiller2",
+              },
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              release = json.load(response)
+          candidates = [
+              asset
+              for asset in release.get("assets", [])
+              if f"_{system}-{machine}." in asset.get("name", "")
+          ]
+          if not candidates:
+              raise SystemExit(f"No BBDown release asset for {system}-{machine}")
+          print(candidates[0]["browser_download_url"])
+          PY
+          )"
+          mkdir -p "$RUNNER_TEMP/bbdown" "$HOME/.local/bin"
+          curl --fail --location --retry 3 "$BBDOWN_URL" \
+            -o "$RUNNER_TEMP/bbdown/package"
+          if unzip -t "$RUNNER_TEMP/bbdown/package" >/dev/null 2>&1; then
+            unzip -q "$RUNNER_TEMP/bbdown/package" \
+              -d "$RUNNER_TEMP/bbdown/extracted"
+          else
+            mkdir -p "$RUNNER_TEMP/bbdown/extracted"
+            tar -xf "$RUNNER_TEMP/bbdown/package" \
+              -C "$RUNNER_TEMP/bbdown/extracted"
+          fi
+          find "$RUNNER_TEMP/bbdown/extracted" -type f -name 'BBDown*' \
+            -exec cp {} "$HOME/.local/bin/BBDown" \; -quit
+          test -s "$HOME/.local/bin/BBDown"
+          chmod +x "$HOME/.local/bin/BBDown"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/BBDown" --help >/dev/null
+
       - name: Install core dependencies
         shell: bash
         run: |

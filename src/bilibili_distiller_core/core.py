@@ -17,6 +17,7 @@ import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,13 @@ YTDLP_COMMON_ARGS = (
     f"Referer: {BILIBILI_REFERER}",
     "--add-header",
     f"Origin: {BILIBILI_ORIGIN}",
+)
+BBDOWN_SUBTITLE_ARGS = ("--sub-only", "--skip-ai=false", "-F", "<bvid>")
+BBDOWN_VIDEO_ARGS = (
+    "--video-only",
+    "--skip-mux",
+    "-q",
+    "360P 流畅,480P 清晰",
 )
 
 BV_RE = re.compile(r"\b(BV[0-9A-Za-z]{10})\b")
@@ -506,6 +514,29 @@ def download_low_quality_video(
     if existing:
         return existing[0]
 
+    bbdown_error: str | None = None
+    bbdown = shutil.which("BBDown")
+    if bbdown:
+        command = [
+            bbdown,
+            video.url,
+            *BBDOWN_VIDEO_ARGS,
+            "--work-dir",
+            str(destination),
+        ]
+        process = _download_with_command(
+            command, runner=command_runner, timeout=900
+        )
+        bbdown_log = (process.stdout or "") + "\n" + (process.stderr or "")
+        videos = _find_videos(destination)
+        if process.returncode == 0 and videos:
+            return videos[0]
+        bbdown_error = (
+            f"BBDown exited with code {process.returncode}: "
+            f"{_last_log_line(bbdown_log)}"
+        )
+        print(bbdown_error, file=sys.stderr, flush=True)
+
     if command_runner is not subprocess.run:
         command = [
             "yt-dlp",
@@ -530,30 +561,45 @@ def download_low_quality_video(
             message = _last_log_line(
                 (process.stdout or "") + "\n" + (process.stderr or "")
             )
+            detail = (
+                f"; yt-dlp fallback: {message}"
+                if bbdown_error
+                else f": {message}"
+            )
             raise RuntimeError(
                 f"low-quality video download failed with exit code "
-                f"{process.returncode}: {message}"
+                f"{process.returncode}{detail}"
             )
     else:
-        _run_ydl(
-            video.url,
-            _ydl_base_opts(
-                {
-                    "format": (
-                        "bestvideo[height>=360][height<=480]/"
-                        "bestvideo[height<=480]/worstvideo/worst"
-                    ),
-                    "outtmpl": str(destination / "source.%(ext)s"),
-                    "nopart": True,
-                    "concurrent_fragment_downloads": 4,
-                }
-            ),
-            download=True,
-        )
+        try:
+            _run_ydl(
+                video.url,
+                _ydl_base_opts(
+                    {
+                        "format": (
+                            "bestvideo[height>=360][height<=480]/"
+                            "bestvideo[height<=480]/worstvideo/worst"
+                        ),
+                        "outtmpl": str(destination / "source.%(ext)s"),
+                        "nopart": True,
+                        "concurrent_fragment_downloads": 4,
+                    }
+                ),
+                download=True,
+            )
+        except Exception as exc:
+            if bbdown_error:
+                raise RuntimeError(
+                    f"{bbdown_error}; yt-dlp fallback failed: "
+                    f"{type(exc).__name__}: {exc}"
+                ) from exc
+            raise
 
     videos = _find_videos(destination)
     if not videos:
-        raise RuntimeError("yt-dlp completed without producing a video file")
+        raise RuntimeError(
+            "download completed without producing a non-empty video file"
+        )
     return videos[0]
 
 
@@ -758,7 +804,31 @@ def download_best_subtitle_track(
     result = SubtitleTrackResult(video_id=video.video_id)
     info: dict[str, Any] = {}
 
-    if command_runner is not subprocess.run:
+    bbdown_error: str | None = None
+    bbdown = shutil.which("BBDown")
+    if bbdown:
+        command = [
+            bbdown,
+            video.url,
+            *BBDOWN_SUBTITLE_ARGS,
+            "--work-dir",
+            str(work_dir),
+        ]
+        process = _download_with_command(
+            command, runner=command_runner, timeout=240
+        )
+        log = (process.stdout or "") + "\n" + (process.stderr or "")
+        result.bbdown_exit_code = process.returncode
+        result.title = extract_title(log)
+        result.log_tail = _last_log_line(log)
+        if process.returncode != 0:
+            bbdown_error = (
+                f"BBDown exited with code {process.returncode}: "
+                f"{result.log_tail}"
+            )
+            print(bbdown_error, file=sys.stderr, flush=True)
+
+    if not bbdown or not _has_usable_subtitle_file(work_dir):
         command = [
             "yt-dlp",
             *yt_dlp_common_args(),
@@ -774,36 +844,36 @@ def download_best_subtitle_track(
             str(work_dir / "%(id)s.%(language)s.%(ext)s"),
             video.url,
         ]
-        process = _download_with_command(
-            command, runner=command_runner, timeout=240
-        )
-        log = (process.stdout or "") + "\n" + (process.stderr or "")
-        result.bbdown_exit_code = process.returncode
-        result.log_tail = _last_log_line(log)
-        if process.returncode != 0:
-            result.download_error = result.log_tail
-    else:
-        try:
-            info = _run_ydl(
-                video.url,
-                _ydl_base_opts(
-                    {
-                        "skip_download": True,
-                        "writesubtitles": True,
-                        "writeautomaticsub": True,
-                        "subtitleslangs": ["all", "-danmaku"],
-                        "subtitlesformat": "srt/vtt/best",
-                        "writeinfojson": True,
-                        "outtmpl": str(work_dir / "%(id)s.%(language)s.%(ext)s"),
-                    }
-                ),
-                download=True,
+        if command_runner is not subprocess.run:
+            process = _download_with_command(
+                command, runner=command_runner, timeout=240
             )
-        except Exception as exc:
-            result.error_traceback = traceback.format_exc()
-            print(result.error_traceback, file=sys.stderr, flush=True)
-            result.download_error = f"{type(exc).__name__}: {exc}"
-            result.log_tail = str(exc)
+            log = (process.stdout or "") + "\n" + (process.stderr or "")
+            result.log_tail = _last_log_line(log)
+            if process.returncode != 0:
+                result.download_error = result.log_tail
+        else:
+            try:
+                info = _run_ydl(
+                    video.url,
+                    _ydl_base_opts(
+                        {
+                            "skip_download": True,
+                            "writesubtitles": True,
+                            "writeautomaticsub": True,
+                            "subtitleslangs": ["all", "-danmaku"],
+                            "subtitlesformat": "srt/vtt/best",
+                            "writeinfojson": True,
+                            "outtmpl": str(work_dir / "%(id)s.%(language)s.%(ext)s"),
+                        }
+                    ),
+                    download=True,
+                )
+            except Exception as exc:
+                result.error_traceback = traceback.format_exc()
+                print(result.error_traceback, file=sys.stderr, flush=True)
+                result.download_error = f"{type(exc).__name__}: {exc}"
+                result.log_tail = str(exc)
 
     metadata = _read_info_metadata(work_dir)
     merged_info = {**metadata, **info}
@@ -856,6 +926,8 @@ def download_best_subtitle_track(
         _score, result.selected_path, result.cues = min(
             candidates, key=lambda item: item[0]
         )
+    elif bbdown_error and not result.download_error:
+        result.download_error = bbdown_error
     return result
 
 
@@ -2619,8 +2691,39 @@ def _find_videos(directory: Path) -> list[Path]:
     return sorted(
         path
         for path in directory.rglob("*")
-        if path.is_file() and path.suffix.lower() in VIDEO_SUFFIXES
+        if path.is_file()
+        and path.suffix.lower() in VIDEO_SUFFIXES
+        and _is_nonempty_file(path)
     )
+
+
+def _has_usable_subtitle_file(work_dir: Path) -> bool:
+    for path in work_dir.rglob("*"):
+        if not (
+            path.is_file()
+            and path.suffix.lower() in SUPPORTED_SUBTITLE_SUFFIXES
+            and _is_nonempty_file(path)
+        ):
+            continue
+        try:
+            if any(is_dialogue_cue(cue) for cue in parse_subtitle_file(path)):
+                return True
+        except (
+            OSError,
+            ValueError,
+            TypeError,
+            json.JSONDecodeError,
+            ET.ParseError,
+        ):
+            continue
+    return False
+
+
+def _is_nonempty_file(path: Path) -> bool:
+    try:
+        return path.stat().st_size > 0
+    except OSError:
+        return False
 
 
 def _read_info_metadata(work_dir: Path) -> dict[str, object]:

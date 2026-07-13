@@ -9,15 +9,15 @@
 ## 处理流程
 
 1. 解析 Bilibili URL、短链接、BV ID 或 AV ID。
-2. 优先用 `yt-dlp` Python API 获取可用字幕轨；成功时直接跳过视频下载和 OCR。
-3. 没有字幕轨时，只下载 360P 优先、480P 回退的无音频低清视频。
+2. 优先用 Actions 安装的 `BBDown` 获取可用字幕轨；成功时直接跳过视频下载和 OCR，失败或不可用时再用 `yt-dlp` Python API 兜底。
+3. 没有字幕轨时，沿用原版的 `BBDown --video-only --skip-mux`，只下载 360P 优先、480P 回退的无音频低清视频；产物必须真实存在且非空。
 4. FFmpeg 单次解码并截图，默认每 3 秒一张；代码硬性禁止小于 3 秒的间隔。
 5. 用字幕区边缘签名复用近似静止帧的 OCR 结果。
 6. RapidOCR 正常只识别一次；文字过短或置信度不足时才追加增强、二值化识别，最多三次。
 7. 对连续 OCR 结果做整句重建并原子写入结果文件。
 8. 成功结果带配置指纹；相同视频和配置再次运行时直接跳过下载、截图和 OCR。
 
-所有 yt-dlp 网络调用共用 Chrome impersonation、Bilibili `Referer`/`Origin` 和 `curl-cffi`；遇到 HTTP 412 时只对同一调用做两次退避重试，并把最终原因写入失败 manifest，避免把网络错误伪装成 OCR 错误。
+GitHub Actions 中的 Bilibili 下载优先走原版验证过的 BBDown 路径；yt-dlp 兜底调用共用 Chrome impersonation、Bilibili `Referer`/`Origin` 和 `curl-cffi`。遇到 HTTP 412 时只对同一调用做两次退避重试，并把最终原因写入失败 manifest，避免把网络错误伪装成 OCR 错误。
 
 ## 整句算法
 
