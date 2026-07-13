@@ -93,7 +93,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install -e .
+          python -m pip install --upgrade --pre "yt-dlp[curl-cffi]>=2026.7.4,<2027"
           yt-dlp --version
+          yt-dlp --list-impersonate-targets
 
       - name: Run unit tests
         shell: bash
@@ -208,5 +210,20 @@ jobs:
         if: always() && steps.extract.outputs.exit_code != '0'
         shell: bash
         run: |
+          if [[ -f "$RUNNER_TEMP/run-summary.json" ]]; then
+            python - "$RUNNER_TEMP/run-summary.json" <<'PY'
+          import json
+          import sys
+
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          for item in data.get("items", []):
+              if not item.get("success"):
+                  print(
+                      f"::error::Input {item.get('input', '')}: "
+                      f"{item.get('failure_reason') or 'unknown failure'}"
+                  )
+          PY
+          fi
           echo "::error::All requested extractions failed"
           exit 1
+

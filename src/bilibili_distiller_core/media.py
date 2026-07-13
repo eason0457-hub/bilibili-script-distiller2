@@ -13,6 +13,16 @@ from .models import CropRegion, PipelineConfig, VideoRef
 
 
 VIDEO_SUFFIXES = {".mp4", ".mkv", ".flv", ".webm"}
+YTDLP_COMMON_ARGS = (
+    "--ignore-config",
+    "--no-playlist",
+    "--impersonate",
+    "chrome",
+    "--add-header",
+    "Referer: https://www.bilibili.com/",
+    "--add-header",
+    "Origin: https://www.bilibili.com",
+)
 
 
 @dataclass(frozen=True)
@@ -21,6 +31,11 @@ class VideoInfo:
     width: int | None
     height: int | None
     duration: float | None
+
+
+def yt_dlp_common_args() -> list[str]:
+    """Use browser-like requests for Bilibili's anti-bot API checks."""
+    return list(YTDLP_COMMON_ARGS)
 
 
 def download_low_quality_video(
@@ -36,8 +51,7 @@ def download_low_quality_video(
 
     command = [
         "yt-dlp",
-        "--ignore-config",
-        "--no-playlist",
+        *yt_dlp_common_args(),
         "--no-part",
         "--concurrent-fragments",
         "4",
@@ -237,3 +251,4 @@ def _optional_int(value: object) -> int | None:
 
 def _number(value: float) -> str:
     return f"{value:g}"
+

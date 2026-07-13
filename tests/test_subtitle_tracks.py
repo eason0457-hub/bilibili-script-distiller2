@@ -28,7 +28,10 @@ class SubtitleTrackTests(unittest.TestCase):
         self.assertTrue(is_dialogue_cue(SubtitleCue(0, 2, "actual dialogue")))
 
     def test_best_track_prefers_human_chinese_and_rejects_music(self):
+        seen_command = []
+
         def fake_runner(command, **_kwargs):
+            seen_command.append(command)
             work_dir = Path(command[command.index("--output") + 1]).parent
             (work_dir / "video.ai.zh.srt").write_text(
                 "1\n00:00:00,000 --> 00:00:02,000\nauto line\n", encoding="utf-8"
@@ -55,7 +58,10 @@ class SubtitleTrackTests(unittest.TestCase):
         self.assertEqual(result.selected_path.name, "video.zh.srt")
         self.assertEqual(result.cues[0].text, "human line")
         self.assertEqual(result.title, "Example")
+        self.assertIn("--impersonate", seen_command[0])
+        self.assertIn("chrome", seen_command[0])
 
 
 if __name__ == "__main__":
     unittest.main()
+

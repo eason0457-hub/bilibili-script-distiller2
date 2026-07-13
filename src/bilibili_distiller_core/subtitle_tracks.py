@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
 
+from .media import yt_dlp_common_args
 from .models import Segment, VideoRef
 
 
@@ -201,8 +202,7 @@ def download_best_subtitle_track(
     work_dir.mkdir(parents=True, exist_ok=True)
     command = [
         "yt-dlp",
-        "--ignore-config",
-        "--no-playlist",
+        *yt_dlp_common_args(),
         "--skip-download",
         "--write-subs",
         "--write-auto-subs",
@@ -312,3 +312,4 @@ def _read_info_metadata(work_dir: Path) -> dict[str, object]:
         if isinstance(payload, dict):
             return payload
     return {}
+

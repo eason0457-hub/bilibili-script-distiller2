@@ -9,11 +9,18 @@ from bilibili_distiller_core.media import (
     signature_distance,
     signatures_are_similar,
     subtitle_signature,
+    yt_dlp_common_args,
 )
 from bilibili_distiller_core.models import PipelineConfig
 
 
 class MediaTests(unittest.TestCase):
+    def test_yt_dlp_uses_browser_like_bilibili_requests(self):
+        args = yt_dlp_common_args()
+        self.assertEqual(args[args.index("--impersonate") + 1], "chrome")
+        self.assertIn("Referer: https://www.bilibili.com/", args)
+        self.assertIn("Origin: https://www.bilibili.com", args)
+
     def test_ffmpeg_uses_single_sparse_three_second_filter(self):
         config = PipelineConfig()
         command = build_frame_extraction_command(
@@ -49,3 +56,4 @@ class MediaTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

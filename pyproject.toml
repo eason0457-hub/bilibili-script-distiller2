@@ -13,6 +13,7 @@ dependencies = [
   "onnxruntime>=1.17,<2",
   "rapidocr>=3.9.1,<4",
   "yt-dlp>=2026.7.4,<2027",
+  "curl-cffi>=0.15,<0.16",
 ]
 
 [project.scripts]
@@ -20,3 +21,4 @@ bilibili-distiller-core = "bilibili_distiller_core.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
