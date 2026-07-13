@@ -226,4 +226,3 @@ jobs:
           fi
           echo "::error::All requested extractions failed"
           exit 1
-
