@@ -14,3 +14,8 @@ in `README.md` and must not modify the media pipeline.
 Keep the output schema backward-compatible. Add fields instead of changing the
 meaning of existing fields, and increment `SCHEMA_VERSION` for incompatible
 changes.
+
+The implementation of the infrastructure belongs in
+`src/bilibili_distiller_core/core.py`. Compatibility modules may re-export
+symbols, but they must not introduce a second network, OCR, or storage
+implementation.
