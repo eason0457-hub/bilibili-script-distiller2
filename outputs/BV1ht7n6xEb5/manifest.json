@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
-  "pipeline_version": "2.0.0",
+  "schema_version": 3,
+  "pipeline_version": "3.0.0",
   "status": "failed",
-  "fingerprint": "e2c011ac447101457ec3fb15f5da5fb9edf34f59e17ebc1f931eae1745f9b56b",
+  "fingerprint": "2243f54eafe547fbbcc72c41808c167d5667fdcd29a363b1fcb53ee83567c23a",
   "input": "BV1ht7n6xEb5",
   "resolved_url": "https://www.bilibili.com/video/BV1ht7n6xEb5/",
   "video_id": "BV1ht7n6xEb5",
@@ -33,19 +33,20 @@
     "frame_index": "frames-index.jsonl",
     "ocr_status": "ocr-status.json"
   },
-  "updated_at": "2026-07-13T06:53:37+00:00",
+  "updated_at": "2026-07-13T08:13:56+00:00",
   "source_type": "hard_subtitle_ocr",
-  "started_at": "2026-07-13T06:53:35+00:00",
-  "completed_at": "2026-07-13T06:53:37+00:00",
-  "duration_seconds": 1.799,
-  "failure_reason": "RuntimeError: low-quality video download failed with exit code 1: ERROR: [BiliBili] 1ht7n6xEb5: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)",
+  "started_at": "2026-07-13T08:13:56+00:00",
+  "completed_at": "2026-07-13T08:13:56+00:00",
+  "duration_seconds": 0.005,
+  "failure_reason": "AssertionError: ",
   "diagnostics": {
     "subtitle_track": {
-      "bbdown_exit_code": 1,
+      "download_error": "AssertionError: ",
+      "bbdown_exit_code": null,
       "files_found": [],
       "selected_file": null,
       "rejected": [],
-      "log_tail": "ERROR: [BiliBili] 1ht7n6xEb5: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)"
+      "log_tail": ""
     }
   }
 }
