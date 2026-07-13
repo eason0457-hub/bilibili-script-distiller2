@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "ocr_engine": "rapidocr_3_onnxruntime",
+  "sample_interval_seconds": 3.0,
+  "frame_count": 290,
+  "ocr_call_count": 338,
+  "reused_frame_count": 1,
+  "enhanced_frame_count": 37,
+  "binary_frame_count": 12,
+  "enhance_call_count": 49,
+  "saved_frame_count": 181,
+  "average_confidence": 0.9753739538868826,
+  "crop_region": {
+    "top": 0.5,
+    "bottom": 0.94,
+    "left": 0.04,
+    "right": 0.96
+  },
+  "frame_similarity_threshold": 0.018,
+  "assembly": {
+    "input_samples": 290,
+    "readable_samples": 286,
+    "temporal_consensus_groups": 92,
+    "overlap_joins": 2,
+    "dropped_low_confidence_fragments": 2
+  },
+  "segment_count": 173
+}
