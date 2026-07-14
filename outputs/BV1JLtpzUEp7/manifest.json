@@ -1,0 +1,74 @@
+{
+  "schema_version": 3,
+  "pipeline_version": "3.0.0",
+  "status": "success",
+  "fingerprint": "6ed9fb6444e43c84d7d6fa6ac9e415dddddc196d1d17fccdb03e2ffc56c99c59",
+  "input": "BV1JLtpzUEp7",
+  "resolved_url": "https://www.bilibili.com/video/BV1JLtpzUEp7/",
+  "video_id": "BV1JLtpzUEp7",
+  "output_key": "BV1JLtpzUEp7",
+  "config": {
+    "sample_interval_seconds": 3.0,
+    "start_time": null,
+    "end_time": null,
+    "crop": {
+      "top": 0.5,
+      "bottom": 0.94,
+      "left": 0.04,
+      "right": 0.96
+    },
+    "prefer_subtitle_track": true,
+    "enable_hardsub_ocr": true,
+    "keep_frames": "changed",
+    "max_frame_width": 1280,
+    "frame_similarity_threshold": 0.018,
+    "adaptive_ocr_confidence": 0.78,
+    "force": false
+  },
+  "outputs": {
+    "segments": "segments.jsonl",
+    "subtitle": "subtitle.srt",
+    "transcript": "transcript.md",
+    "source_card": "source-card.md",
+    "frame_index": "frames-index.jsonl",
+    "ocr_status": "ocr-status.json"
+  },
+  "updated_at": "2026-07-14T14:42:45+00:00",
+  "source_type": "hard_subtitle_ocr",
+  "started_at": "2026-07-14T14:33:56+00:00",
+  "completed_at": "2026-07-14T14:42:45+00:00",
+  "duration_seconds": 529.756,
+  "stats": {
+    "segment_count": 543
+  },
+  "diagnostics": {
+    "subtitle_track": {
+      "download_error": "DownloadError: ERROR: [BiliBili] 1JLtpzUEp7: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)",
+      "bbdown_exit_code": 0,
+      "files_found": [],
+      "selected_file": null,
+      "rejected": [],
+      "log_tail": "ERROR: [BiliBili] 1JLtpzUEp7: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)",
+      "traceback": "Traceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/extractor/common.py\", line 907, in _request_webpage\n    return self._downloader.urlopen(self._create_request(url_or_request, data, headers, query, extensions))\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 4305, in urlopen\n    return self._request_director.send(req)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/networking/common.py\", line 117, in send\n    response = handler.send(request)\n               ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/networking/_curlcffi.py\", line 243, in send\n    response = super().send(request)\n               ^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/networking/_helper.py\", line 194, in wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/networking/common.py\", line 359, in send\n    return self._send(request)\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/networking/_curlcffi.py\", line 339, in _send\n    raise HTTPError(response, redirect_loop=max_redirects_exceeded)\nyt_dlp.networking.exceptions.HTTPError: HTTP Error 412: Precondition Failed\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1732, in wrapper\n    return func(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1867, in __extract_info\n    ie_result = ie.extract(url)\n                ^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/extractor/common.py\", line 765, in extract\n    ie_result = self._real_extract(url)\n                ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/extractor/bilibili.py\", line 726, in _real_extract\n    webpage, urlh = self._download_webpage_handle(url, video_id, headers=headers)\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/extractor/common.py\", line 971, in _download_webpage_handle\n    urlh = self._request_webpage(url_or_request, video_id, note, errnote, fatal, data=data,\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/extractor/common.py\", line 920, in _request_webpage\n    raise ExtractorError(errmsg, cause=err, video_id=video_id)\nyt_dlp.utils.ExtractorError: [BiliBili] 1JLtpzUEp7: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/runner/work/bilibili-script-distiller2/bilibili-script-distiller2/src/bilibili_distiller_core/core.py\", line 857, in download_best_subtitle_track\n    info = _run_ydl(\n           ^^^^^^^^^\n  File \"/home/runner/work/bilibili-script-distiller2/bilibili-script-distiller2/src/bilibili_distiller_core/core.py\", line 475, in _run_ydl\n    info = ydl.extract_info(url, download=download)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1721, in extract_info\n    return self.__extract_info(url, self.get_info_extractor(key), download, extra_info, process)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1750, in wrapper\n    self.report_error(str(e), e.format_traceback())\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1166, in report_error\n    self.trouble(f'{self._format_err(\"ERROR:\", self.Styles.ERROR)} {message}', *args, **kwargs)\n  File \"/opt/hostedtoolcache/Python/3.11.15/x64/lib/python3.11/site-packages/yt_dlp/YoutubeDL.py\", line 1104, in trouble\n    raise DownloadError(message, exc_info)\nyt_dlp.utils.DownloadError: ERROR: [BiliBili] 1JLtpzUEp7: Unable to download webpage: HTTP Error 412: Precondition Failed (caused by <HTTPError 412: Precondition Failed>)\n"
+    },
+    "video": {
+      "downloaded_file": "114993857042778.P1.31572954816.mp4",
+      "quality": "360P preferred, 480P fallback",
+      "width": 640,
+      "height": 360,
+      "duration": 2362.533,
+      "ffmpeg_frame_extraction_passes": 1,
+      "frame_count": 788
+    },
+    "ocr": {
+      "ocr_engine": "rapidocr_3_onnxruntime",
+      "frame_count": 788,
+      "ocr_call_count": 924,
+      "reused_frame_count": 12,
+      "enhanced_frame_count": 111,
+      "binary_frame_count": 37,
+      "saved_frame_count": 571
+    }
+  },
+  "failure_reason": null
+}
